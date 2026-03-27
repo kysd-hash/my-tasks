@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>同期タスクマトリクス</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --axis-color: #333;
+            --text-color: #333;
+            /* 配色（ラベンダー、ペールブルー、ティール、イエロー） */
+            --color-self-long: #f3e5f5;
+            --color-self-quick: #e8eaf6;
+            --color-other-long: #e0f2f1;
+            --color-other-quick: #fff9c4;
+            --label-bg: rgba(0,0,0,0.8);
+            --shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0; padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh;
+            /* スマホでのスクロールバウンスを防ぐ */
+            position: fixed; width: 100%; overflow: hidden;
+        }
+
+        .matrix-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            width: 100%; height: 100%;
+            background-color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 象限共通 */
+        .quadrant {
+            padding: 50px 15px 15px 15px; /* 上余白を広げてラベルを回避 */
+            display: flex; flex-direction: column;
+            position: relative;
+            transition: background-color 0.2s;
+            -webkit-overflow-scrolling: touch; /* iOSスクロール */
+        }
+
+        /* 各象限の色 */
+        #q-self-long { background-color: var(--color-self-long); border-right: 1px solid rgba(0,0,0,0.05); border-bottom: 1px solid rgba(0,0,0,0.05); }
+        #q-self-quick { background-color: var(--color-self-quick); border-bottom: 1px solid rgba(0,0,0,0.05); }
+        #q-other-long { background-color: var(--color-other-long); border-right: 1px solid rgba(0,0,0,0.05); }
+        #q-other-quick { background-color: var(--color-other-quick); }
+
+        /* 軸と矢印 */
+        .axis { position: absolute; background-color: var(--axis-color); z-index: 5; pointer-events: none; }
+        .axis-v { width: 3px; height: 100%; left: 50%; top: 0; transform: translateX(-50%); opacity: 0.8; }
+        .axis-h { width: 100%; height: 3px; left: 0; top: 50%; transform: translateY(-50%); opacity: 0.8; }
+
+        .arrow { position: absolute; width: 0; height: 0; border-style: solid; z-index: 6; pointer-events: none; }
+        .arrow-up { border-width: 0 10px 15px 10px; border-color: transparent transparent var(--axis-color) transparent; top: 0; left: 50%; transform: translateX(-50%); }
+        .arrow-down { border-width: 15px 10px 0 10px; border-color: var(--axis-color) transparent transparent transparent; bottom: 0; left: 50%; transform: translateX(-50%); }
+        .arrow-left { border-width: 10px 15px 10px 0; border-color: transparent var(--axis-color) transparent transparent; left: 0; top: 50%; transform: translateY(-50%); }
+        .arrow-right { border-width: 10px 0 10px 15px; border-color: transparent transparent transparent var(--axis-color); right: 0; top: 50%; transform: translateY(-50%); }
+
+        /* 軸ラベル（レスポンシブ配置） */
+        .label {
+            position: absolute; background: var(--label-bg); color: white;
+            padding: 6px 15px; border-radius: 20px;
+            font-size: 14px; font-weight: bold; z-index: 10;
+            white-space: nowrap; pointer-events: none;
+            box-shadow: var(--shadow);
+        }
+        .label-top { top: 15px; left: 50%; transform: translateX(-50%); }
+        .label-bottom { bottom: 15px; left: 50%; transform: translateX(-50%); }
+        
+        /* スマホ向け：左右ラベルを中央寄り・横書きに */
+        .label-left { left: 15px; top: 50%; transform: translateY(-50%); }
+        .label-right { right: 15px; top: 50%; transform: translateY(-50%); }
+
+        /* タスクリスト（スマホでのスクロールをスムーズに） */
+        .task-list {
+            list-style: none; padding: 0; margin: 0;
+            flex-grow: 1; overflow-y: auto; z-index: 2;
+        }
+        
+        /* タスクアイテム（タップしやすく広く） */
+        .task-item {
+            display: flex; align-items: center;
+            padding: 12px; background: rgba(255, 255, 255, 0.8);
+            margin-bottom: 8px; border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: transform 0.1s;
+        }
+        .task-item:active { transform: scale(0.98); } /* タップ時のフィードバック */
+
+        /* 完了・未完了の動的文字サイズ（3つ以上で小さく） */
+        .small-text .task-input { font-size: 14px; }
+        .small-text .check-btn { width: 22px; height: 22px; font-size: 12px; }
+
+        /* 独自チェックボタン */
+        .check-btn {
+            width: 26px; height: 26px; border-radius: 50%; border: 2px solid #aaa;
+            background: white; margin-right: 12px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; flex-shrink: 0; transition: 0.2s;
+        }
+        .check-btn.done { background: #666; color: white; border-color: #666; }
+        .check-btn.done::after { content: '✓'; }
+
+        /* 入力欄（文字サイズ、タップ範囲調整） */
+        .task-input {
+            flex-grow: 1; border: none; background: transparent;
+            font-size: 17px; outline: none; padding: 5px 0;
+            color: var(--text-color);
+        }
+        .completed .task-input { text-decoration: line-through; color: #888; opacity: 0.7; }
+
+        /* 削除ボタン */
+        .del-btn { color: #ff5252; border: none; background: none; cursor: pointer; font-size: 22px; margin-left: 10px; padding: 0 8px; opacity: 0.4; }
+        .del-btn:active { opacity: 1; }
+
+        /* 追加エリア（スマホでも押しやすく） */
+        .add-area {
+            display: flex; margin-top: 10px; z-index: 2;
+            background-color: rgba(255,255,255,0.9); border-radius: 8px;
+            padding: 5px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+        .add-area input { flex-grow: 1; padding: 12px; border: 1px solid #ddd; border-radius: 6px; outline: none; font-size: 16px; }
+        .add-area button { margin-left: 8px; padding: 0 20px; background: #333; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 22px; font-weight: bold; }
+
+        /* 同期中オーバーレイ */
+        #loading {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.9); display: flex; justify-content: center; align-items: center;
+            z-index: 100; font-size: 18px; color: #666;
+        }
+
+        /* 📱 スマホ（縦向き）向けのレスポンシブ調整 */
+        @media screen and (max-width: 600px) {
+            .quadrant { padding-top: 55px; } /* 上ラベル回避 */
+            .label { font-size: 12px; padding: 3px 10px; }
+            .label-left, .label-right { top: 48%; }
+            
+            .task-input { font-size: 16px; }
+            .add-area input { font-size: 15px; padding: 10px; }
+            .add-area button { padding: 0 15px; font-size: 20px; }
+            
+            /* タスクが増えたらさらに小さく */
+            .small-text .task-input { font-size: 13px; }
+            .small-text .check-btn { width: 20px; height: 20px; font-size: 11px; margin-right: 8px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading">Firebaseと同期中...</div>
+
+    <div class="matrix-container">
+        <div class="axis axis-v"></div><div class="axis axis-h"></div>
+        <div class="arrow arrow-up"></div><div class="arrow arrow-down"></div>
+        <div class="arrow arrow-left"></div><div class="arrow arrow-right"></div>
+
+        <div class="label label-top">自分</div>
+        <div class="label label-bottom">他人</div>
+        <div class="label label-left">時間がかかる</div>
+        <div class="label label-right">すぐできる</div>
+
+        <div class="quadrant" id="q-self-long">
+            <ul class="task-list" id="list-self-long"></ul>
+            <div class="add-area">
+                <input type="text" placeholder="タスクを追加..." onkeydown="if(event.key==='Enter')addTask('list-self-long')">
+                <button onclick="addTask('list-self-long')">+</button>
+            </div>
+        </div>
+
+        <div class="quadrant" id="q-self-quick">
+            <ul class="task-list" id="list-self-quick"></ul>
+            <div class="add-area">
+                <input type="text" placeholder="タスクを追加..." onkeydown="if(event.key==='Enter')addTask('list-self-quick')">
+                <button onclick="addTask('list-self-quick')">+</button>
+            </div>
+        </div>
+
+        <div class="quadrant" id="q-other-long">
+            <ul class="task-list" id="list-other-long"></ul>
+            <div class="add-area">
+                <input type="text" placeholder="タスクを追加..." onkeydown="if(event.key==='Enter')addTask('list-other-long')">
+                <button onclick="addTask('list-other-long')">+</button>
+            </div>
+        </div>
+
+        <div class="quadrant" id="q-other-quick">
+            <ul class="task-list" id="list-other-quick"></ul>
+            <div class="add-area">
+                <input type="text" placeholder="タスクを追加..." onkeydown="if(event.key==='Enter')addTask('list-other-quick')">
+                <button onclick="addTask('list-other-quick')">+</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        // 
+        const firebaseConfig = {
+            apiKey: "AIzaSyC1rBBrcZ2Z7uZpR64DHtdRQhEb8I5RVcw",
+  authDomain: "mytask-d954b.firebaseapp.com",
+  projectId: "mytask-d954b",
+  storageBucket: "mytask-d954b.firebasestorage.app",
+  messagingSenderId: "363381438284",
+  appId: "1:363381438284:web:e8539704e1abf0f58141e9"
+};
+        // Firebase 初期化
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const tasksRef = database.ref('tasks'); // データベース内のパス
+
+        let state = {
+            'list-self-long': [], 'list-self-quick': [], 'list-other-long': [], 'list-other-quick': []
+        };
+
+        // データの初期読み込みとリアルタイム同期の設定
+        tasksRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                state = data; // サーバーのデータで上書き
+                // 各リストを再描画
+                for (let id in state) renderList(id);
+            } else {
+                // データが空の場合は初期化
+                tasksRef.set(state);
+            }
+            // ローディングを消す
+            document.getElementById('loading').style.display = 'none';
+        });
+
+        // タスク追加
+        function addTask(listId) {
+            const input = document.querySelector(`#${listId.replace('list', 'q')} .add-area input`);
+            const text = input.value.trim();
+            if (!text) return;
+            // 未完了(done: false)で追加
+            state[listId].push({ text: text, done: false });
+            input.value = '';
+            sync(); // サーバーへ同期
+        }
+
+        // 完了・未完了の切り替え
+        function toggleDone(listId, index) {
+            state[listId][index].done = !state[listId][index].done;
+            sync(); // サーバーへ同期
+        }
+
+        // タスク削除
+        function deleteTask(listId, index) {
+            state[listId].splice(index, 1);
+            sync(); // サーバーへ同期
+        }
+
+        // タスク編集
+        function editTask(listId, index, newText) {
+            state[listId][index].text = newText;
+            // 編集は入力ごとに同期すると重いので、onblur (フォーカス外れた時) で同期
+            // ここではstateの更新のみ、sync()は呼ばない
+        }
+
+        // サーバーへデータを同期（保存）
+        function sync() {
+            tasksRef.set(state); // state全体をサーバーに書き込む
+        }
+
+        // リストの描画
+        function renderList(listId) {
+            const listEl = document.getElementById(listId);
+            listEl.innerHTML = '';
+            
+            // タスクが3つ以上なら文字を小さくするクラスを付与
+            if (state[listId].length >= 3) {
+                listEl.classList.add('small-text');
+            } else {
+                listEl.classList.remove('small-text');
+            }
+
+            state[listId].forEach((task, index) => {
+                const li = document.createElement('li');
+                li.className = `task-item ${task.done ? 'completed' : ''}`;
+
+                // 独自チェックボタン（on問題回避版）
+                const checkBtn = document.createElement('div');
+                checkBtn.className = `check-btn ${task.done ? 'done' : ''}`;
+                checkBtn.onclick = () => toggleDone(listId, index);
+
+                // テキスト入力
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'task-input';
+                input.value = task.text;
+                input.oninput = (e) => editTask(listId, index, e.target.value); // stateを更新
+                input.onblur = () => sync(); // フォーカスが外れた瞬間にサーバーに保存
+
+                // 削除ボタン
+                const delBtn = document.createElement('button');
+                delBtn.className = 'del-btn';
+                delBtn.innerHTML = '×';
+                delBtn.onclick = () => deleteTask(listId, index);
+
+                li.appendChild(checkBtn);
+                li.appendChild(input);
+                li.appendChild(delBtn);
+                listEl.appendChild(li);
+            });
+        }
+    </script>
+</body>
+</html>
