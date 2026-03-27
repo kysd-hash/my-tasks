@@ -8,83 +8,63 @@
         :root {
             --bg-color: #f0f2f5;
             --axis-color: #333;
-            --color-self-long: #f3e5f5;  /* ラベンダー */
-            --color-self-quick: #e8eaf6; /* ペールブルー */
-            --color-other-long: #e0f2f1; /* ペールティール */
-            --color-other-quick: #fff9c4;/* ペールイエロー */
+            --color-self-long: #f3e5f5;
+            --color-self-quick: #e8eaf6;
+            --color-other-long: #e0f2f1;
+            --color-other-quick: #fff9c4;
         }
 
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body, html {
             margin: 0; padding: 0;
             width: 100%; height: 100%;
-            overflow: hidden; /* スクロールさせない */
+            overflow: hidden;
             background-color: var(--bg-color);
             font-family: sans-serif;
         }
 
-        /* 画面全体を4分割 */
         .matrix-wrapper {
-            display: flex;
-            flex-wrap: wrap;
-            width: 100vw;
-            height: 100vh;
+            display: flex; flex-wrap: wrap;
+            width: 100vw; height: 100vh;
             position: relative;
         }
 
         .quadrant {
-            width: 50%;
-            height: 50%;
-            display: flex;
-            flex-direction: column;
-            padding: 45px 15px 10px 15px; /* ラベルとの重なり防止 */
+            width: 50%; height: 50%;
+            display: flex; flex-direction: column;
+            padding: 45px 15px 10px 15px;
             position: relative;
         }
 
-        /* 色分け */
         #q-self-long { background-color: var(--color-self-long); }
         #q-self-quick { background-color: var(--color-self-quick); }
         #q-other-long { background-color: var(--color-other-long); }
         #q-other-quick { background-color: var(--color-other-quick); }
 
-        /* 中央の軸（絶対ズレない設定） */
         .axis-v { position: absolute; left: 50%; top: 0; width: 3px; height: 100%; background: var(--axis-color); transform: translateX(-50%); z-index: 5; pointer-events: none; }
         .axis-h { position: absolute; top: 50%; left: 0; width: 100%; height: 3px; background: var(--axis-color); transform: translateY(-50%); z-index: 5; pointer-events: none; }
 
-        /* 矢印（端に固定） */
-        .arrow { position: absolute; width: 0; height: 0; border-style: solid; z-index: 6; pointer-events: none; }
-        .arrow-up { border-width: 0 10px 12px 10px; border-color: transparent transparent var(--axis-color) transparent; top: 0; left: 50%; transform: translateX(-50%); }
-        .arrow-down { border-width: 12px 10px 0 10px; border-color: var(--axis-color) transparent transparent transparent; bottom: 0; left: 50%; transform: translateX(-50%); }
-        .arrow-left { border-width: 10px 12px 10px 0; border-color: transparent var(--axis-color) transparent transparent; left: 0; top: 50%; transform: translateY(-50%); }
-        .arrow-right { border-width: 10px 0 10px 12px; border-color: transparent transparent transparent var(--axis-color); right: 0; top: 50%; transform: translateY(-50%); }
-
-        /* ラベル（端に寄せる） */
         .label {
             position: absolute; background: #333; color: white;
-            padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; z-index: 10; white-space: nowrap;
+            padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; z-index: 10; white-space: nowrap;
         }
         .label-top { top: 10px; left: 50%; transform: translateX(-50%); }
         .label-bottom { bottom: 10px; left: 50%; transform: translateX(-50%); }
         .label-left { left: 5px; top: 50%; transform: translateY(-50%); }
         .label-right { right: 5px; top: 50%; transform: translateY(-50%); }
 
-        /* リストエリア */
         .task-list { list-style: none; padding: 0; margin: 0; flex-grow: 1; overflow-y: auto; }
         .task-item { display: flex; align-items: center; padding: 8px; background: rgba(255,255,255,0.7); margin-bottom: 5px; border-radius: 6px; }
         
-        /* 独自チェックボタン (on回避) */
         .check-btn { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #666; background: white; margin-right: 8px; cursor: pointer; flex-shrink: 0; position: relative; }
         .check-btn.done { background: #666; }
         .check-btn.done::after { content: '✓'; color: white; position: absolute; left: 4px; top: -1px; font-size: 14px; }
 
-        .task-input { flex-grow: 1; border: none; background: transparent; font-size: 15px; outline: none; }
+        .task-input { flex-grow: 1; border: none; background: transparent; font-size: 15px; outline: none; padding: 0; margin: 0; }
         .completed .task-input { text-decoration: line-through; color: #888; }
-        
-        /* 文字数が多い時の調整 */
         .small-text .task-input { font-size: 13px; }
 
-        /* 追加エリア */
         .add-area { display: flex; margin-top: 5px; }
         .add-area input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; outline: none; font-size: 14px; }
         .add-area button { margin-left: 5px; padding: 0 15px; background: #333; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 20px; }
@@ -98,9 +78,6 @@
 
     <div class="matrix-wrapper">
         <div class="axis-v"></div><div class="axis-h"></div>
-        <div class="arrow arrow-up"></div><div class="arrow arrow-down"></div>
-        <div class="arrow arrow-left"></div><div class="arrow arrow-right"></div>
-
         <div class="label label-top">自分</div>
         <div class="label label-bottom">他人</div>
         <div class="label label-left">時間がかかる</div>
@@ -129,8 +106,9 @@
     <script>
         // ★★★ここにFirebaseの設定を貼り付けてください★★★
         const firebaseConfig = {
-           apiKey: "AIzaSyC1rBBrcZ2Z7uZpR64DHtdRQhEb8I5RVcw",
+            apiKey: "AIzaSyC1rBBrcZ2Z7uZpR64DHtdRQhEb8I5RVcw",
   authDomain: "mytask-d954b.firebaseapp.com",
+  databaseURL: "https://mytask-d954b-default-rtdb.firebaseio.com",
   projectId: "mytask-d954b",
   storageBucket: "mytask-d954b.firebasestorage.app",
   messagingSenderId: "363381438284",
@@ -143,14 +121,20 @@
 
         tasksRef.on('value', (s) => {
             const d = s.val();
-            if (d) { state = d; for (let id in state) render(id); }
+            if (d) { 
+                state = d; 
+                // 各リストにデータが欠けていないかチェック
+                for (let key in state) { if (!Array.isArray(state[key])) state[key] = []; }
+                for (let id in state) render(id); 
+            }
             document.getElementById('loading').style.display = 'none';
         });
 
         function addTask(id) {
             const input = document.querySelector(`#${id.replace('list', 'q')} input`);
-            if (!input.value.trim()) return;
-            state[id].push({ text: input.value.trim(), done: false });
+            const val = input.value.trim();
+            if (!val) return;
+            state[id].push({ text: val, done: false });
             input.value = '';
             tasksRef.set(state);
         }
@@ -161,14 +145,19 @@
 
         function render(id) {
             const el = document.getElementById(id); el.innerHTML = '';
+            if (!state[id]) return;
             if (state[id].length >= 3) el.classList.add('small-text');
+            else el.classList.remove('small-text');
+
             state[id].forEach((t, i) => {
                 const li = document.createElement('li');
                 li.className = `task-item ${t.done ? 'completed' : ''}`;
+                
+                // 修正ポイント: ${t.text} を正しく表示するようにしました
                 li.innerHTML = `
                     <div class="check-btn ${t.done ? 'done' : ''}" onclick="toggleDone('${id}', ${i})"></div>
                     <input type="text" class="task-input" value="${t.text}" onchange="editTask('${id}', ${i}, this.value)">
-                    <div onclick="deleteTask('${id}', ${i})" style="cursor:pointer;opacity:0.3;margin-left:5px;">×</div>
+                    <div onclick="deleteTask('${id}', ${i})" style="cursor:pointer;opacity:0.3;margin-left:5px;font-size:20px;">×</div>
                 `;
                 el.appendChild(li);
             });
