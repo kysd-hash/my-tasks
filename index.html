@@ -13,100 +13,76 @@
             --color-other-long: #e0f2f1;
             --color-other-quick: #fff9c4;
         }
-
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: var(--bg-color); font-family: sans-serif; }
 
-        body, html {
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            overflow: hidden;
-            background-color: var(--bg-color);
-            font-family: sans-serif;
-        }
-
-        .matrix-wrapper {
-            display: flex; flex-wrap: wrap;
-            width: 100vw; height: 100vh;
-            position: relative;
-        }
-
-        .quadrant {
-            width: 50%; height: 50%;
-            display: flex; flex-direction: column;
-            padding: 45px 15px 10px 15px;
-            position: relative;
-        }
-
+        /* 画面レイアウト */
+        .matrix-wrapper { display: flex; flex-wrap: wrap; width: 100vw; height: 100vh; position: relative; }
+        .quadrant { width: 50%; height: 50%; display: flex; flex-direction: column; padding: 45px 15px 10px 15px; position: relative; }
         #q-self-long { background-color: var(--color-self-long); }
         #q-self-quick { background-color: var(--color-self-quick); }
         #q-other-long { background-color: var(--color-other-long); }
         #q-other-quick { background-color: var(--color-other-quick); }
 
-        .axis-v { position: absolute; left: 50%; top: 0; width: 3px; height: 100%; background: var(--axis-color); transform: translateX(-50%); z-index: 5; pointer-events: none; }
-        .axis-h { position: absolute; top: 50%; left: 0; width: 100%; height: 3px; background: var(--axis-color); transform: translateY(-50%); z-index: 5; pointer-events: none; }
-
-        .label {
-            position: absolute; background: #333; color: white;
-            padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; z-index: 10; white-space: nowrap;
-        }
+        /* 軸とラベル */
+        .axis-v { position: absolute; left: 50%; top: 0; width: 2px; height: 100%; background: var(--axis-color); transform: translateX(-50%); z-index: 5; pointer-events: none; }
+        .axis-h { position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: var(--axis-color); transform: translateY(-50%); z-index: 5; pointer-events: none; }
+        .label { position: absolute; background: #333; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; z-index: 10; white-space: nowrap; }
         .label-top { top: 10px; left: 50%; transform: translateX(-50%); }
         .label-bottom { bottom: 10px; left: 50%; transform: translateX(-50%); }
         .label-left { left: 5px; top: 50%; transform: translateY(-50%); }
         .label-right { right: 5px; top: 50%; transform: translateY(-50%); }
 
+        /* リスト表示 */
         .task-list { list-style: none; padding: 0; margin: 0; flex-grow: 1; overflow-y: auto; }
-        .task-item { display: flex; align-items: center; padding: 8px; background: rgba(255,255,255,0.7); margin-bottom: 5px; border-radius: 6px; }
-        
-        .check-btn { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #666; background: white; margin-right: 8px; cursor: pointer; flex-shrink: 0; position: relative; }
-        .check-btn.done { background: #666; }
-        .check-btn.done::after { content: '✓'; color: white; position: absolute; left: 4px; top: -1px; font-size: 14px; }
-
-        .task-input { flex-grow: 1; border: none; background: transparent; font-size: 15px; outline: none; padding: 0; margin: 0; }
+        .task-item { display: flex; align-items: center; padding: 8px; background: rgba(255,255,255,0.8); margin-bottom: 5px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .check-btn { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #666; background: white; margin-right: 8px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .check-btn.done { background: #666; color: white; }
+        .check-btn.done::after { content: '✓'; font-size: 14px; }
+        .task-input { flex-grow: 1; border: none; background: transparent; font-size: 15px; outline: none; padding: 0; }
         .completed .task-input { text-decoration: line-through; color: #888; }
         .small-text .task-input { font-size: 13px; }
+        .del-btn { color: #ff5252; border: none; background: none; cursor: pointer; font-size: 18px; margin-left: 5px; opacity: 0.3; }
 
-        .add-area { display: flex; margin-top: 5px; }
-        .add-area input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; outline: none; font-size: 14px; }
-        .add-area button { margin-left: 5px; padding: 0 15px; background: #333; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 20px; }
+        /* 入力エリア */
+        .add-area { display: flex; margin-top: 5px; background: white; border-radius: 4px; padding: 2px; }
+        .add-area input { flex-grow: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; outline: none; font-size: 14px; }
+        .add-area button { margin-left: 4px; padding: 0 12px; background: #333; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 18px; }
 
-        #loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 100; display: flex; justify-content: center; align-items: center; }
+        #loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 100; display: flex; justify-content: center; align-items: center; font-weight: bold; }
     </style>
 </head>
 <body>
-
-    <div id="loading">Firebaseと同期中...</div>
-
+    <div id="loading">読み込み中...</div>
     <div class="matrix-wrapper">
         <div class="axis-v"></div><div class="axis-h"></div>
-        <div class="label label-top">自分</div>
-        <div class="label label-bottom">他人</div>
-        <div class="label label-left">時間がかかる</div>
-        <div class="label label-right">すぐできる</div>
+        <div class="label label-top">自分</div><div class="label label-bottom">他人</div>
+        <div class="label label-left">時間がかかる</div><div class="label label-right">すぐできる</div>
 
         <div class="quadrant" id="q-self-long">
             <ul class="task-list" id="list-self-long"></ul>
-            <div class="add-area"><input type="text" placeholder="+" onkeydown="if(event.key==='Enter')addTask('list-self-long')"><button onclick="addTask('list-self-long')">+</button></div>
+            <div class="add-area"><input type="text" placeholder="追加" onkeydown="if(event.key==='Enter')addTask('list-self-long')"><button onclick="addTask('list-self-long')">+</button></div>
         </div>
         <div class="quadrant" id="q-self-quick">
             <ul class="task-list" id="list-self-quick"></ul>
-            <div class="add-area"><input type="text" placeholder="+" onkeydown="if(event.key==='Enter')addTask('list-self-quick')"><button onclick="addTask('list-self-quick')">+</button></div>
+            <div class="add-area"><input type="text" placeholder="追加" onkeydown="if(event.key==='Enter')addTask('list-self-quick')"><button onclick="addTask('list-self-quick')">+</button></div>
         </div>
         <div class="quadrant" id="q-other-long">
             <ul class="task-list" id="list-other-long"></ul>
-            <div class="add-area"><input type="text" placeholder="+" onkeydown="if(event.key==='Enter')addTask('list-other-long')"><button onclick="addTask('list-other-long')">+</button></div>
+            <div class="add-area"><input type="text" placeholder="追加" onkeydown="if(event.key==='Enter')addTask('list-other-long')"><button onclick="addTask('list-other-long')">+</button></div>
         </div>
         <div class="quadrant" id="q-other-quick">
             <ul class="task-list" id="list-other-quick"></ul>
-            <div class="add-area"><input type="text" placeholder="+" onkeydown="if(event.key==='Enter')addTask('list-other-quick')"><button onclick="addTask('list-other-quick')">+</button></div>
+            <div class="add-area"><input type="text" placeholder="追加" onkeydown="if(event.key==='Enter')addTask('list-other-quick')"><button onclick="addTask('list-other-quick')">+</button></div>
         </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script>
-        // ★★★ここにFirebaseの設定を貼り付けてください★★★
+        // 
         const firebaseConfig = {
-            apiKey: "AIzaSyC1rBBrcZ2Z7uZpR64DHtdRQhEb8I5RVcw",
+        apiKey: "AIzaSyC1rBBrcZ2Z7uZpR64DHtdRQhEb8I5RVcw",
   authDomain: "mytask-d954b.firebaseapp.com",
   databaseURL: "https://mytask-d954b-default-rtdb.firebaseio.com",
   projectId: "mytask-d954b",
@@ -122,18 +98,19 @@
         tasksRef.on('value', (s) => {
             const d = s.val();
             if (d) { 
-                state = d; 
-                // 各リストにデータが欠けていないかチェック
-                for (let key in state) { if (!Array.isArray(state[key])) state[key] = []; }
-                for (let id in state) render(id); 
+                state = d;
+                Object.keys(state).forEach(key => { if(!Array.isArray(state[key])) state[key] = []; });
+                Object.keys(state).forEach(id => render(id));
             }
             document.getElementById('loading').style.display = 'none';
         });
 
         function addTask(id) {
-            const input = document.querySelector(`#${id.replace('list', 'q')} input`);
+            const q = id.replace('list', 'q');
+            const input = document.querySelector(`#${q} .add-area input`);
             const val = input.value.trim();
             if (!val) return;
+            if (!state[id]) state[id] = [];
             state[id].push({ text: val, done: false });
             input.value = '';
             tasksRef.set(state);
@@ -144,20 +121,18 @@
         function deleteTask(id, i) { state[id].splice(i, 1); tasksRef.set(state); }
 
         function render(id) {
-            const el = document.getElementById(id); el.innerHTML = '';
-            if (!state[id]) return;
+            const el = document.getElementById(id); if (!el) return;
+            el.innerHTML = '';
             if (state[id].length >= 3) el.classList.add('small-text');
             else el.classList.remove('small-text');
 
             state[id].forEach((t, i) => {
                 const li = document.createElement('li');
                 li.className = `task-item ${t.done ? 'completed' : ''}`;
-                
-                // 修正ポイント: ${t.text} を正しく表示するようにしました
                 li.innerHTML = `
                     <div class="check-btn ${t.done ? 'done' : ''}" onclick="toggleDone('${id}', ${i})"></div>
                     <input type="text" class="task-input" value="${t.text}" onchange="editTask('${id}', ${i}, this.value)">
-                    <div onclick="deleteTask('${id}', ${i})" style="cursor:pointer;opacity:0.3;margin-left:5px;font-size:20px;">×</div>
+                    <div class="del-btn" onclick="deleteTask('${id}', ${i})">×</div>
                 `;
                 el.appendChild(li);
             });
